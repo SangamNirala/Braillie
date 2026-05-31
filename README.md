@@ -2,7 +2,19 @@
 
 > An assistive AI system that reads real physical/embossed Braille using a camera and converts it into English text and speech in real time.
 
+<img width="612" height="344" alt="test5" src="https://github.com/user-attachments/assets/90dc9790-fee3-4e6e-912c-21cf58fbf23e" />
+
+
+
+
+<img width="612" height="344" alt="test5_braille_result" src="https://github.com/user-attachments/assets/6491983c-a1c4-4785-8572-877f4955d9d6" />
+
 ---
+
+## Live PHOTO during taking video
+
+
+<img width="709" height="671" alt="preview" src="https://github.com/user-attachments/assets/5e9f8a2f-da87-4a71-984a-eb126b3e7585" />
 
 ## 📌 Project Overview
 
