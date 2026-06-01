@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ════════════════════════════ Design tokens ════════════════════════════ */
     :root {
       --bg:            #070914;
       --surface:       rgba(255, 255, 255, 0.045);
@@ -49,11 +48,8 @@
       overflow-x: hidden;
     }
 
-    /* ════════════════════════════ Aurora (single canvas, GPU-light) ════════════════════════════ */
-    /* Replaced 3 blurred spans + mix-blend with a single conic gradient + radial overlay.
-       No filter:blur, no mix-blend-mode — just one compositor layer that animates transform. */
     .aurora {
-      position: absolute;          /* was fixed → now scrolls with content, one fewer fixed layer */
+      position: absolute;
       inset: -20% -20% auto -20%;
       height: 120vh;
       z-index: -2;
@@ -83,7 +79,6 @@
 
     .wrap { max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
 
-    /* ════════════════════════════ Header ════════════════════════════ */
     .topbar { display: flex; align-items: center; gap: var(--logo-gap); margin-bottom: 8px; }
     .logo {
       width: var(--logo-size); height: var(--logo-size);
@@ -128,7 +123,6 @@
       color:#8ff0bb;
     }
     .tagline-badge .pingdot { width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green); }
-    /* Replaced magic number 74px with calc → resilient to font-size changes */
     .sub {
       color: var(--text-dim);
       font-size: 0.97rem;
@@ -138,7 +132,6 @@
       line-height: 1.5;
     }
 
-    /* ════════════════════════════ Tabs (with proper a11y) ════════════════════════════ */
     .tabs {
       display: inline-flex;
       gap: 4px;
@@ -173,17 +166,14 @@
       transition: transform 0.35s cubic-bezier(.65,.05,.36,1), width 0.35s cubic-bezier(.65,.05,.36,1);
       z-index: 0;
       will-change: transform, width;
-      opacity: 0;  /* hidden until first measurement to avoid flicker */
+      opacity: 0;
     }
     .tab-glider.ready { opacity: 1; }
 
-    /* ════════════════════════════ Panels ════════════════════════════ */
     .panel { display: none; animation: fadeUp 0.45s ease; }
     .panel.active { display: block; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
-    /* ════════════════════════════ Upload zone — state-driven ════════════════════════════ */
-    /* All visual variation now driven by [data-state] attribute (idle | drag | invalid | selected) */
     .upload-zone {
       border: 2px dashed var(--border-strong);
       border-radius: var(--radius);
@@ -206,7 +196,6 @@
       box-shadow: var(--glow-blue);
     }
     .upload-zone:hover::before, .upload-zone[data-state="drag"]::before { opacity:1; }
-
     .upload-zone[data-state="invalid"] {
       border-color: var(--red);
       background: rgba(255,77,109,0.06);
@@ -217,7 +206,6 @@
       25% { transform: translateX(-6px); }
       75% { transform: translateX(6px); }
     }
-
     .upload-zone[data-state="selected"] {
       border-style: solid;
       border-color: var(--accent);
@@ -237,11 +225,9 @@
     }
     .upload-zone:hover .upload-icon { transform: translateY(-4px) scale(1.06); box-shadow: var(--glow-blue); }
     .upload-icon svg { width: 32px; height: 32px; }
-
     .upload-zone strong { font-size: 1.1rem; font-weight: 600; display: block; letter-spacing:-0.01em; }
     .upload-zone p { color: var(--text-faint); margin: 0.55rem 0 0; font-size: 0.86rem; }
 
-    /* "Selected file" sub-state UI */
     .file-preview { display: none; align-items: center; gap: 16px; }
     .upload-zone[data-state="selected"] .upload-default { display: none; }
     .upload-zone[data-state="selected"] .file-preview   { display: flex; }
@@ -266,7 +252,6 @@
     }
     .file-clear:hover { background: rgba(255,77,109,0.2); border-color: rgba(255,77,109,0.4); }
 
-    /* ════════════════════════════ Skeleton loading (replaces spinner text) ════════════════════════════ */
     .skeleton-card {
       display: none;
       background: var(--surface);
@@ -306,7 +291,6 @@
     .skel-imgs   { display:flex; gap: 16px; margin-top: 22px; }
     .skel-img    { flex:1; height: 140px; }
 
-    /* ════════════════════════════ Camera ════════════════════════════ */
     .cam-container {
       position: relative;
       background: #000;
@@ -347,7 +331,6 @@
     .cam-placeholder .ph-icon { font-size:3rem; opacity:0.45; }
     .cam-placeholder.hidden { display:none; }
 
-    /* Camera controls — grid not flex-wrap, icon-only on mobile */
     .cam-controls {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -361,8 +344,6 @@
       .cam-controls .btn { gap: 0; }
     }
 
-    /* ════════════════════════════ Result box — grid-row reveal ════════════════════════════ */
-    /* Smooth height-based reveal using grid-template-rows 0fr→1fr. Children stagger in. */
     .result-wrap {
       display: grid;
       grid-template-rows: 0fr;
@@ -385,7 +366,6 @@
       content:""; position:absolute; top:0; left:0; right:0; height:3px;
       background: var(--accent-grad); opacity:0.9;
     }
-    /* Stagger children in once container opens */
     .result-wrap.open .result-box > * {
       animation: fadeChild 0.4s ease both;
     }
@@ -402,7 +382,6 @@
       text-transform:uppercase; letter-spacing:0.16em;
       margin-bottom:0.65rem; font-weight:700;
     }
-    /* Fluid clamping for any text length; remove letter-spacing (prose needs natural tracking) */
     .result-text {
       font-family:'Space Grotesk', monospace;
       font-size: clamp(1.1rem, 3.5vw, 2.2rem);
@@ -417,8 +396,8 @@
       padding:4px 12px; border-radius:999px;
       background:var(--surface-2); border:1px solid var(--border);
       font-size:0.76rem; color:var(--text-dim); font-weight:500;
-      letter-spacing: 0.04em;  /* tracking OK for label-like chips */
-      cursor: default;  /* removed pointer — chips aren't actionable */
+      letter-spacing: 0.04em;
+      cursor: default;
       transition: background 0.2s, border-color 0.2s, color 0.2s;
     }
     .chip[data-clickable="true"] { cursor: pointer; }
@@ -428,7 +407,6 @@
       color: var(--text);
     }
 
-    /* Confidence meter */
     .confidence {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 4px 12px; border-radius: 999px;
@@ -448,7 +426,6 @@
     .conf-fill.med { background: var(--amber); }
     .conf-fill.low { background: var(--red); }
 
-    /* ════════════════════════════ Braille cell preview ════════════════════════════ */
     .braille-preview {
       display: flex; gap: 10px; margin-top: 1rem; padding: 14px;
       background: var(--surface-2); border: 1px solid var(--border);
@@ -486,7 +463,6 @@
       transform: scale(1.08);
     }
 
-    /* ════════════════════════════ History strip ════════════════════════════ */
     .history-strip {
       display: none;
       gap: 10px; margin-top: 1.2rem;
@@ -530,7 +506,6 @@
       margin-top:9px; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;
     }
 
-    /* ════════════════════════════ Live badge (aria-live) ════════════════════════════ */
     .live-badge {
       display:none; align-items:center; gap:9px;
       font-size:0.78rem; font-weight:700; letter-spacing:0.1em;
@@ -549,7 +524,6 @@
       100%{box-shadow:0 0 0 0 rgba(255,77,109,0);opacity:1}
     }
 
-    /* ════════════════════════════ Buttons (z-index fix for shimmer) ════════════════════════════ */
     .btn {
       display:inline-flex; align-items:center; gap:8px;
       padding:12px 22px; border:1px solid transparent; border-radius:12px;
@@ -557,15 +531,13 @@
       transition:transform 0.16s, box-shadow 0.22s, opacity 0.15s, background 0.2s;
       position:relative; overflow:hidden;
     }
-    /* Shimmer pseudo-element kept under content */
     .btn::after{
       content:""; position:absolute; inset:0;
       background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35), transparent 70%);
       transform:translateX(-120%); transition:transform 0.6s;
-      z-index: 0;  /* explicit */
+      z-index: 0;
       pointer-events: none;
     }
-    /* Label + icon lifted ABOVE shimmer */
     .btn > * { position: relative; z-index: 1; }
     .btn:hover:not(:disabled)::after { transform:translateX(120%); }
     .btn:hover:not(:disabled) { transform:translateY(-2px); }
@@ -577,10 +549,8 @@
     .btn-red   { background:linear-gradient(135deg,#ff4d6d,#dc2626); color:#fff; box-shadow:0 12px 28px -12px rgba(255,77,109,0.5); }
     .btn-plain { background:var(--surface-2); color:var(--text); border-color:var(--border); }
     .btn-plain:hover:not(:disabled){ background:var(--surface-hi); }
-
     .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    /* ════════════════════════════ Error ════════════════════════════ */
     .error {
       color:#ffc0cb; margin-top:1rem; font-size:0.86rem;
       display:none; align-items:center; gap:9px;
@@ -595,7 +565,6 @@
     canvas { display:none; }
     canvas.waveform { display: inline-block; }
 
-    /* ════════════════════════════ Toast (with visibility fallback) ════════════════════════════ */
     .toast {
       position:fixed; bottom:26px; left:50%;
       transform:translateX(-50%) translateY(20px);
@@ -605,7 +574,7 @@
       padding:11px 20px; border-radius:14px; font-size:0.86rem; font-weight:500;
       box-shadow:var(--shadow);
       opacity:0;
-      visibility: hidden;            /* fallback so Firefox doesn't flash */
+      visibility: hidden;
       pointer-events:none;
       transition: opacity 0.3s, transform 0.3s, visibility 0s linear 0.3s;
       z-index:50;
@@ -626,7 +595,6 @@
       width: 64px; height: 18px; vertical-align: middle;
     }
 
-    /* sr-only utility */
     .sr-only {
       position: absolute; width: 1px; height: 1px;
       padding: 0; margin: -1px; overflow: hidden;
@@ -649,7 +617,6 @@
 </head>
 <body>
 
-<!-- SVG sprite — single source of truth for icons (consistent rendering vs emoji) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -700,7 +667,6 @@
 
 <div class="wrap">
 
-  <!-- Header -->
   <div class="topbar">
     <div class="logo" aria-hidden="true">
       <div class="logo-dots">
@@ -716,7 +682,6 @@
   </div>
   <p class="sub">Upload a Braille image — or use your live camera for real-time detection &amp; instant speech.</p>
 
-  <!-- Tabs with proper ARIA -->
   <div class="tabs" role="tablist" id="tabs" aria-label="Detection mode">
     <span class="tab-glider" id="tabGlider" aria-hidden="true"></span>
     <button class="tab-btn" id="tab-upload" role="tab" aria-selected="true"  aria-controls="panel-upload" tabindex="0">
@@ -727,11 +692,11 @@
     </button>
   </div>
 
-  <!-- UPLOAD PANEL -->
+  <!-- ══════════════════ UPLOAD PANEL ══════════════════ -->
   <div class="panel active" id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
 
     <div class="upload-zone" id="uploadZone" data-state="idle" role="button" tabindex="0"
-         aria-label="Upload Braille image. Click or drag and drop a file." >
+         aria-label="Upload Braille image. Click or drag and drop a file.">
       <div class="upload-default">
         <div class="upload-icon"><svg><use href="#i-upload"/></svg></div>
         <strong>Click to choose a Braille image</strong>
@@ -750,7 +715,6 @@
     </div>
     <input type="file" id="fileInput" accept="image/*" style="display:none" aria-hidden="true">
 
-    <!-- Skeleton replaces spinner -->
     <div class="skeleton-card" id="uploadSkeleton" aria-hidden="true">
       <div class="skel skel-label"></div>
       <div class="skel skel-text"></div>
@@ -770,7 +734,6 @@
       <span id="uploadErrorMsg"></span>
     </div>
 
-    <!-- Grid-row reveal wrapper -->
     <div class="result-wrap" id="uploadResultWrap">
       <div class="result-box" id="uploadResult">
         <div class="result-label">Detected Text</div>
@@ -782,12 +745,39 @@
           <div><div class="img-frame"><img id="uploadAnnotated" src="" alt="Annotated detection result"></div><span>Annotated</span></div>
         </div>
         <div style="margin-top:1.5rem; display:flex; gap:11px; flex-wrap:wrap;">
+          <!-- FIX: unique IDs for upload panel speak/stop buttons -->
           <button class="btn btn-green" id="btnSpeakUpload">
             <svg><use href="#i-speak"/></svg><span class="btn-label">Speak</span>
+          </button>
+          <button class="btn btn-red" id="btnStopSpeakUpload" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="1"/>
+            </svg>
+            <span class="btn-label">Stop</span>
           </button>
           <button class="btn btn-plain" id="btnCopyUpload">
             <svg><use href="#i-copy"/></svg><span class="btn-label">Copy</span>
           </button>
+          <button class="btn btn-plain" id="btnEnhance" style="border-color: rgba(124,155,255,0.5); color: var(--accent);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              <path d="M11 8v6M8 11h6"/>
+            </svg>
+            <span class="btn-label" id="btnEnhanceLabel">
+              Enhance &amp; Retry
+              <br>
+              <small style="font-size: 11px; opacity: 0.7; line-height: 1.3;">
+                Use only if the result<br>
+                is not accurate
+              </small>
+            </span>
+          </button>
+          <span id="enhancedBadge" style="display:none; align-items:center; gap:6px;
+            padding:4px 12px; border-radius:999px; font-size:0.76rem; font-weight:600;
+            background:rgba(124,155,255,0.15); border:1px solid rgba(124,155,255,0.4);
+            color:var(--accent);">
+            ✦ Enhanced Mode
+          </span>
           <button class="btn btn-plain" id="btnResetUpload">
             <svg><use href="#i-reset"/></svg><span class="btn-label">Reset</span>
           </button>
@@ -795,12 +785,11 @@
       </div>
     </div>
 
-    <!-- History strip -->
     <div class="history-strip" id="historyStrip" aria-label="Recent detections"></div>
 
   </div>
 
-  <!-- CAMERA PANEL -->
+  <!-- ══════════════════ CAMERA PANEL ══════════════════ -->
   <div class="panel" id="panel-camera" role="tabpanel" aria-labelledby="tab-camera">
 
     <div class="live-badge" id="liveBadge" role="status" aria-live="polite">
@@ -822,6 +811,7 @@
 
     <canvas id="snapCanvas"></canvas>
 
+    <!-- FIX: camera controls use unique IDs btnSpeakCam / btnStopSpeakCam -->
     <div class="cam-controls">
       <button class="btn btn-dark"  id="startCamBtn" aria-label="Start camera">
         <svg><use href="#i-play"/></svg><span class="btn-label">Start</span>
@@ -829,8 +819,14 @@
       <button class="btn btn-red"   id="stopCamBtn"  disabled aria-label="Stop camera">
         <svg><use href="#i-stop"/></svg><span class="btn-label">Stop</span>
       </button>
-      <button class="btn btn-green" id="speakCamBtn" disabled aria-label="Speak detected text">
+      <button class="btn btn-green" id="btnSpeakCam" disabled aria-label="Speak detected text">
         <svg><use href="#i-speak"/></svg><span class="btn-label">Speak</span>
+      </button>
+      <button class="btn btn-red" id="btnStopSpeakCam" style="display:none;" aria-label="Stop speaking">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="6" width="12" height="12" rx="1"/>
+        </svg>
+        <span class="btn-label">Stop</span>
       </button>
     </div>
 
@@ -839,7 +835,6 @@
       <span id="camErrorMsg"></span>
     </div>
 
-    <!-- Camera result: hidden until first detection, grid-row reveal -->
     <div class="result-wrap" id="camResultWrap">
       <div class="result-box" id="camResult">
         <div class="result-label">Live Detected Text</div>
@@ -854,7 +849,6 @@
   <div class="footer">BrailleVision · Braille <span class="heart">→</span> Text <span class="heart">→</span> Speech</div>
 </div>
 
-<!-- Toast with live waveform canvas -->
 <div class="toast" id="toast" role="status" aria-live="polite">
   <canvas class="waveform" id="waveCanvas" width="128" height="36" aria-hidden="true"></canvas>
   <span class="eq" id="toastEq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -863,10 +857,11 @@
 
 <script>
 'use strict';
+let lastUploadedFile = null;
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Braille pattern map (Grade-1 ASCII subset) — used for dot preview
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   Braille pattern map (Grade-1 ASCII subset)
+   ═══════════════════════════════════════════════════════════════ */
 const BRAILLE_MAP = {
   a:[1],         b:[1,2],       c:[1,4],       d:[1,4,5],     e:[1,5],
   f:[1,2,4],     g:[1,2,4,5],   h:[1,2,5],     i:[2,4],       j:[2,4,5],
@@ -876,36 +871,30 @@ const BRAILLE_MAP = {
   z:[1,3,5,6],   ' ':[]
 };
 function dotsFor(char){
-  const k = char.toLowerCase();
-  return BRAILLE_MAP[k] || null;
+  return BRAILLE_MAP[char.toLowerCase()] || null;
 }
 function renderBraillePreview(container, text){
   container.innerHTML = '';
   if (!text || text === '—' || text === 'No Braille detected') return;
-  const chars = text.slice(0, 24).split('');
-  chars.forEach(ch => {
+  text.slice(0, 24).split('').forEach(ch => {
     const dots = dotsFor(ch);
     if (!dots) return;
     const cell = document.createElement('div');
     cell.className = 'braille-cell';
     cell.setAttribute('data-char', ch === ' ' ? '␣' : ch.toUpperCase());
-    // Grid order: 1,4,2,5,3,6 (col-major Braille standard)
-    [1,4,2,5,3,6].forEach((n,i) => {
+    [1,4,2,5,3,6].forEach((n, i) => {
       const d = document.createElement('div');
       d.className = 'braille-dot';
       cell.appendChild(d);
-      // Animate-in with stagger
-      setTimeout(() => {
-        if (dots.includes(n)) d.classList.add('on');
-      }, 80 * i + 50);
+      setTimeout(() => { if (dots.includes(n)) d.classList.add('on'); }, 80 * i + 50);
     });
     container.appendChild(cell);
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Tabs — ResizeObserver-based glider (no flicker on font load)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   Tabs
+   ═══════════════════════════════════════════════════════════════ */
 const tabBtnUpload = document.getElementById('tab-upload');
 const tabBtnCamera = document.getElementById('tab-camera');
 const tabGlider    = document.getElementById('tabGlider');
@@ -922,7 +911,6 @@ function getActiveTabBtn(){
 const tabRO = new ResizeObserver(() => moveGlider(getActiveTabBtn()));
 tabRO.observe(tabBtnUpload);
 tabRO.observe(tabBtnCamera);
-// Run after fonts load too
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(() => moveGlider(getActiveTabBtn()));
 }
@@ -940,7 +928,6 @@ function switchTab(name){
 }
 tabBtnUpload.addEventListener('click', () => switchTab('upload'));
 tabBtnCamera.addEventListener('click', () => switchTab('camera'));
-// Arrow-key tab navigation (a11y)
 [tabBtnUpload, tabBtnCamera].forEach((b, i, arr) => {
   b.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -952,9 +939,9 @@ tabBtnCamera.addEventListener('click', () => switchTab('camera'));
   });
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Upload zone — rAF-throttled spotlight, state machine, file preview
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   Upload zone
+   ═══════════════════════════════════════════════════════════════ */
 const uploadZone = document.getElementById('uploadZone');
 const fileInput  = document.getElementById('fileInput');
 let pointerRAF = 0;
@@ -976,11 +963,9 @@ uploadZone.addEventListener('click', e => {
 });
 uploadZone.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && uploadZone.dataset.state !== 'selected') {
-    e.preventDefault();
-    fileInput.click();
+    e.preventDefault(); fileInput.click();
   }
 });
-
 uploadZone.addEventListener('dragover', e => {
   e.preventDefault();
   if (uploadZone.dataset.state === 'idle') setZoneState('drag');
@@ -989,17 +974,14 @@ uploadZone.addEventListener('dragleave', () => {
   if (uploadZone.dataset.state === 'drag') setZoneState('idle');
 });
 uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  setZoneState('idle');
+  e.preventDefault(); setZoneState('idle');
   if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
 fileInput.addEventListener('change', e => {
   if (e.target.files[0]) handleFile(e.target.files[0]);
 });
-
 document.getElementById('fileClear').addEventListener('click', e => {
-  e.stopPropagation();
-  resetUpload();
+  e.stopPropagation(); resetUpload();
 });
 
 function formatBytes(n){
@@ -1022,7 +1004,6 @@ function handleFile(file){
     return;
   }
   hideUploadError();
-  // Show preview state
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('fileThumbImg').src = e.target.result;
@@ -1032,12 +1013,13 @@ function handleFile(file){
   document.getElementById('fileName').textContent = file.name;
   document.getElementById('fileSize').textContent = formatBytes(file.size) + ' · ' + (file.type.split('/')[1] || 'image').toUpperCase();
   setZoneState('selected');
+  lastUploadedFile = file;
   processUpload(file);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Upload processing — skeleton, result reveal, history, confidence
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   Upload processing
+   ═══════════════════════════════════════════════════════════════ */
 const uploadResultWrap = document.getElementById('uploadResultWrap');
 const uploadSkeleton   = document.getElementById('uploadSkeleton');
 
@@ -1053,21 +1035,20 @@ async function processUpload(file){
     const res  = await fetch('/predict', { method: 'POST', body: fd });
     const data = await res.json();
     uploadSkeleton.classList.remove('visible');
-
     if (!res.ok || !data.success) {
       showUploadError(data.detail || 'Detection failed.');
       return;
     }
     populateResult({
-      textEl:  document.getElementById('uploadText'),
-      metaEl:  document.getElementById('uploadMeta'),
+      textEl: document.getElementById('uploadText'),
+      metaEl: document.getElementById('uploadMeta'),
       brailleEl: document.getElementById('braillePreview'),
       annotatedEl: document.getElementById('uploadAnnotated'),
       data
     });
     uploadResultWrap.classList.add('open');
     addHistory(file, data);
-  } catch (err) {
+  } catch {
     uploadSkeleton.classList.remove('visible');
     showUploadError('Network error — is the server running on port 8000?');
   }
@@ -1075,7 +1056,6 @@ async function processUpload(file){
 
 function populateResult({ textEl, metaEl, brailleEl, annotatedEl, data }){
   textEl.textContent = data.text || '—';
-  // Confidence meter (defaults to 0.85 if API doesn't return)
   const conf = typeof data.confidence === 'number' ? data.confidence : 0.85;
   const confPct = Math.round(conf * 100);
   const confClass = conf >= 0.75 ? '' : (conf >= 0.5 ? 'med' : 'low');
@@ -1094,7 +1074,7 @@ function populateResult({ textEl, metaEl, brailleEl, annotatedEl, data }){
 function resetUpload(){
   uploadResultWrap.classList.remove('open');
   fileInput.value = null;
-  document.getElementById('fileThumbImg').src = '';
+  document.getElementById('fileThumbImg').src  = '';
   document.getElementById('uploadOriginal').src  = '';
   document.getElementById('uploadAnnotated').src = '';
   document.getElementById('fileName').textContent = '';
@@ -1102,6 +1082,8 @@ function resetUpload(){
   uploadSkeleton.classList.remove('visible');
   hideUploadError();
   setZoneState('idle');
+  document.getElementById('enhancedBadge').style.display = 'none';
+  lastUploadedFile = null;
 }
 
 function showUploadError(msg){
@@ -1112,9 +1094,9 @@ function hideUploadError(){
   document.getElementById('uploadError').classList.remove('visible');
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   History strip (sessionStorage)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   History strip
+   ═══════════════════════════════════════════════════════════════ */
 const HISTORY_KEY = 'braillevision_history';
 function loadHistory(){
   try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY) || '[]'); }
@@ -1128,11 +1110,7 @@ function addHistory(file, data){
   const reader = new FileReader();
   reader.onload = e => {
     const items = loadHistory();
-    items.unshift({
-      thumb: e.target.result,
-      text: data.text,
-      time: Date.now()
-    });
+    items.unshift({ thumb: e.target.result, text: data.text, time: Date.now() });
     saveHistory(items);
     renderHistory();
   };
@@ -1165,12 +1143,14 @@ function renderHistory(){
     });
   });
 }
-function escapeHtml(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
 renderHistory();
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    Camera mode
-   ═══════════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════ */
 let stream = null, liveTimer = null, isDetecting = false, latestCamText = '';
 const FRAME_INTERVAL_MS = 600;
 
@@ -1182,7 +1162,6 @@ const camResultWrap = document.getElementById('camResultWrap');
 
 document.getElementById('startCamBtn').addEventListener('click', startCamera);
 document.getElementById('stopCamBtn').addEventListener('click', stopCamera);
-document.getElementById('speakCamBtn').addEventListener('click', () => speak(latestCamText));
 
 async function startCamera(){
   hideCamError();
@@ -1195,9 +1174,9 @@ async function startCamera(){
     document.getElementById('camPlaceholder').classList.add('hidden');
     document.getElementById('scanline').classList.add('on');
     document.getElementById('camCorners').classList.add('on');
-    document.getElementById('startCamBtn').disabled = true;
-    document.getElementById('stopCamBtn').disabled  = false;
-    document.getElementById('speakCamBtn').disabled = false;
+    document.getElementById('startCamBtn').disabled  = true;
+    document.getElementById('stopCamBtn').disabled   = false;
+    document.getElementById('btnSpeakCam').disabled  = false;   // FIX: correct ID
     document.getElementById('liveBadge').classList.add('visible');
     liveTimer = setInterval(sendFrame, FRAME_INTERVAL_MS);
   } catch (err) {
@@ -1213,11 +1192,11 @@ function stopCamera(){
   document.getElementById('camPlaceholder').classList.remove('hidden');
   document.getElementById('scanline').classList.remove('on');
   document.getElementById('camCorners').classList.remove('on');
-  document.getElementById('startCamBtn').disabled = false;
-  document.getElementById('stopCamBtn').disabled  = true;
-  document.getElementById('speakCamBtn').disabled = true;
+  document.getElementById('startCamBtn').disabled  = false;
+  document.getElementById('stopCamBtn').disabled   = true;
+  document.getElementById('btnSpeakCam').disabled  = true;     // FIX: correct ID
   document.getElementById('liveBadge').classList.remove('visible');
-  camResultWrap.classList.remove('open');  // hide result panel on stop
+  camResultWrap.classList.remove('open');
 }
 
 async function sendFrame(){
@@ -1235,13 +1214,12 @@ async function sendFrame(){
       if (data.success) {
         latestCamText = data.text;
         populateResult({
-          textEl:  document.getElementById('camText'),
-          metaEl:  document.getElementById('camMeta'),
+          textEl: document.getElementById('camText'),
+          metaEl: document.getElementById('camMeta'),
           brailleEl: document.getElementById('camBraillePreview'),
           annotatedEl: null,
           data
         });
-        // Reveal the result panel once we have first detection
         if (!camResultWrap.classList.contains('open')) camResultWrap.classList.add('open');
         overlay.src = `data:image/jpeg;base64,${data.image_b64}`;
         overlay.style.display = 'block';
@@ -1250,32 +1228,31 @@ async function sendFrame(){
   }, 'image/jpeg', 0.85);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Shared TTS + Web Audio waveform (replaces static EQ bars)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   TTS + Web Audio waveform
+   FIX: speak() now accepts speakBtn & stopBtn as params so it works
+        correctly for both the upload panel and camera panel.
+   ═══════════════════════════════════════════════════════════════ */
 let audioCtx = null, analyser = null, waveRAF = 0;
 const waveCanvas = document.getElementById('waveCanvas');
 const waveCtx = waveCanvas.getContext('2d');
 
-// Synthetic waveform driven by TTS (Web Speech doesn't expose audio nodes,
-// so we drive a visual analyser using an oscillator that pulses with utterance state).
 function startWaveform(){
   if (!window.AudioContext && !window.webkitAudioContext) { fallbackEq(true); return; }
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
+    const osc  = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    analyser  = audioCtx.createAnalyser();
+    analyser   = audioCtx.createAnalyser();
     analyser.fftSize = 64;
-    gain.gain.value = 0; // silent — purely visual
+    gain.gain.value = 0;
     osc.type = 'sine';
     osc.frequency.value = 220;
     osc.connect(gain).connect(analyser);
     analyser.connect(audioCtx.destination);
     osc.start();
-    waveCanvas.dataset.osc = '1';
-    waveCanvas._osc = osc;
+    waveCanvas._osc  = osc;
     waveCanvas._gain = gain;
     fallbackEq(false);
     drawWave();
@@ -1287,68 +1264,73 @@ function stopWaveform(){
   waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
 }
 function fallbackEq(showFallback){
-  const eq = document.getElementById('toastEq');
-  eq.style.display = showFallback ? 'inline-flex' : 'none';
+  document.getElementById('toastEq').style.display = showFallback ? 'inline-flex' : 'none';
   waveCanvas.style.display = showFallback ? 'none' : 'inline-block';
 }
 function drawWave(){
   if (!analyser) return;
-  const buf = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(buf);
-  // Synthesize visual energy from speech state (since true mic isn't routed)
   const speaking = speechSynthesis.speaking && !speechSynthesis.paused;
   waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
   const bars = 20, gap = 2;
   const w = (waveCanvas.width - gap * (bars - 1)) / bars;
   for (let i = 0; i < bars; i++) {
-    // Pseudo-random per-bar pulse synchronized with speaking state
     const t = performance.now() / 200 + i * 0.45;
     const energy = speaking ? (Math.sin(t) * 0.5 + 0.5) * 0.85 + Math.random() * 0.15 : 0.05;
     const h = Math.max(2, energy * waveCanvas.height);
     waveCtx.fillStyle = `rgba(46, 227, 122, ${0.4 + energy * 0.6})`;
-    const x = i * (w + gap);
-    const y = (waveCanvas.height - h) / 2;
-    waveCtx.fillRect(x, y, w, h);
+    waveCtx.fillRect(i * (w + gap), (waveCanvas.height - h) / 2, w, h);
   }
   waveRAF = requestAnimationFrame(drawWave);
 }
 
-function speak(text){
+/**
+ * speak(text, speakBtn, stopBtn)
+ * Handles TTS for any panel — just pass the relevant button elements.
+ */
+function speak(text, speakBtn, stopBtn){
   if (!text || text === '—' || text === 'No Braille detected') return;
   speechSynthesis.cancel();
 
+  stopBtn.style.display  = 'inline-flex';
+  speakBtn.style.display = 'none';
+
+  function onDone(){
+    stopBtn.style.display  = 'none';
+    speakBtn.style.display = 'inline-flex';
+    hideToast();
+    stopWaveform();
+  }
+
   const words = text.trim().split(/\s+/);
-
   if (words.length > 1) {
-    // Multiple words — speak naturally as a sentence
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate   = 0.85;
+    const u   = new SpeechSynthesisUtterance(text);
+    u.rate    = 0.85;
     u.onstart = () => { showToast('Speaking…', true); startWaveform(); };
-    u.onend   = () => { hideToast(); stopWaveform(); };
-    u.onerror = () => { hideToast(); stopWaveform(); };
+    u.onend   = onDone;
+    u.onerror = onDone;
     speechSynthesis.speak(u);
-
   } else {
-    // Single word / letter sequence — spell each letter individually
     const letters = words[0].split('');
-
-    const intro = new SpeechSynthesisUtterance('Braille letters:');
-    intro.rate  = 0.9;
+    const intro   = new SpeechSynthesisUtterance('Braille letters:');
+    intro.rate    = 0.9;
     intro.onstart = () => { showToast('Speaking…', true); startWaveform(); };
     speechSynthesis.speak(intro);
-
     letters.forEach((letter, i) => {
       const u   = new SpeechSynthesisUtterance(letter);
       u.rate    = 0.75;
       u.pitch   = 1.1;
-      // Stop waveform only after last letter
-      if (i === letters.length - 1) {
-        u.onend   = () => { hideToast(); stopWaveform(); };
-        u.onerror = () => { hideToast(); stopWaveform(); };
-      }
+      if (i === letters.length - 1) { u.onend = onDone; u.onerror = onDone; }
       speechSynthesis.speak(u);
     });
   }
+}
+
+function stopSpeaking(speakBtn, stopBtn){
+  speechSynthesis.cancel();
+  stopBtn.style.display  = 'none';
+  speakBtn.style.display = 'inline-flex';
+  hideToast();
+  stopWaveform();
 }
 
 function copyText(text){
@@ -1359,18 +1341,81 @@ function copyText(text){
   );
 }
 
-document.getElementById('btnSpeakUpload').addEventListener('click', () => speak(document.getElementById('uploadText').textContent));
-document.getElementById('btnCopyUpload').addEventListener('click',  () => copyText(document.getElementById('uploadText').textContent));
+/* ── Upload panel button wiring ── */
+const btnSpeakUpload     = document.getElementById('btnSpeakUpload');
+const btnStopSpeakUpload = document.getElementById('btnStopSpeakUpload');
+
+btnSpeakUpload.addEventListener('click', () =>
+  speak(document.getElementById('uploadText').textContent, btnSpeakUpload, btnStopSpeakUpload)
+);
+btnStopSpeakUpload.addEventListener('click', () =>
+  stopSpeaking(btnSpeakUpload, btnStopSpeakUpload)
+);
+
+/* ── Camera panel button wiring ── */
+const btnSpeakCam     = document.getElementById('btnSpeakCam');
+const btnStopSpeakCam = document.getElementById('btnStopSpeakCam');
+
+btnSpeakCam.addEventListener('click', () =>
+  speak(latestCamText, btnSpeakCam, btnStopSpeakCam)
+);
+btnStopSpeakCam.addEventListener('click', () =>
+  stopSpeaking(btnSpeakCam, btnStopSpeakCam)
+);
+
+/* ── Other upload buttons ── */
+document.getElementById('btnCopyUpload').addEventListener('click', () =>
+  copyText(document.getElementById('uploadText').textContent)
+);
 document.getElementById('btnResetUpload').addEventListener('click', resetUpload);
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Toast with transitionend listener (Firefox flash fix)
-   ═══════════════════════════════════════════════════════════════════════════ */
+document.getElementById('btnEnhance').addEventListener('click', async () => {
+  if (!lastUploadedFile) return;
+  const btn   = document.getElementById('btnEnhance');
+  const label = document.getElementById('btnEnhanceLabel');
+  btn.disabled      = true;
+  label.textContent = 'Enhancing…';
+
+  uploadResultWrap.classList.remove('open');
+  uploadSkeleton.classList.add('visible');
+  hideUploadError();
+
+  const fd = new FormData();
+  fd.append('file', lastUploadedFile);
+
+  try {
+    const res  = await fetch('/predict/enhanced', { method: 'POST', body: fd });
+    const data = await res.json();
+    uploadSkeleton.classList.remove('visible');
+    if (!res.ok || !data.success) {
+      showUploadError(data.detail || 'Enhanced detection failed.');
+      return;
+    }
+    populateResult({
+      textEl:      document.getElementById('uploadText'),
+      metaEl:      document.getElementById('uploadMeta'),
+      brailleEl:   document.getElementById('braillePreview'),
+      annotatedEl: document.getElementById('uploadAnnotated'),
+      data
+    });
+    document.getElementById('enhancedBadge').style.display = 'inline-flex';
+    uploadResultWrap.classList.add('open');
+  } catch {
+    uploadSkeleton.classList.remove('visible');
+    showUploadError('Network error during enhanced detection.');
+  } finally {
+    btn.disabled      = false;
+    label.textContent = 'Enhance & Retry';
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   Toast
+   ═══════════════════════════════════════════════════════════════ */
 let toastTimer = null;
 function showToast(msg, withEq){
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
-  // EQ vs waveform visibility handled by startWaveform/fallbackEq
   if (!withEq) {
     document.getElementById('toastEq').style.display = 'none';
     waveCanvas.style.display = 'none';
@@ -1382,7 +1427,6 @@ function showToast(msg, withEq){
 function hideToast(){
   const t = document.getElementById('toast');
   t.classList.remove('show');
-  // Cleanup waveform after transition completes
   const onEnd = e => {
     if (e.propertyName === 'opacity') {
       stopWaveform();

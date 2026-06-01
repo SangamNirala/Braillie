@@ -32,16 +32,15 @@ from ultralytics import YOLO
 # Config
 # ═══════════════════════════════════════════════════════════════════════════════
 DEFAULT_WEIGHTS   = "model/best.pt"
-DEFAULT_CONF      = 0.25          # lowered from 0.40 → catches low-confidence embossed letters
-DEFAULT_IOU       = 0.35          # tighter NMS: prevents duplicate boxes on dense grids
+DEFAULT_CONF      = 0.25
+DEFAULT_IOU       = 0.35
 IMGSZ             = 640
-ROW_GAP_RATIO     = 0.55          # row gap = this × median box height (tuned for grid layouts)
-SPEAK_COOLDOWN_S  = 3.0           # min seconds between auto-speech triggers
-STABILITY_FRAMES  = 8             # frames the same text must hold before auto-speak
+ROW_GAP_RATIO     = 0.55
+WORD_GAP_RATIO    = 1.2   # horizontal gap > 1.2× median char width → word boundary
+SPEAK_COOLDOWN_S  = 3.0
+STABILITY_FRAMES  = 8
 FONT              = cv2.FONT_HERSHEY_SIMPLEX
 
-# ── Braille number indicator mapping ───────────────────────────────────────────
-# When a '#' (number indicator) is detected, the next letters map to digits
 _LETTER_TO_DIGIT = {
     'a': '1', 'b': '2', 'c': '3', 'd': '4', 'e': '5',
     'f': '6', 'g': '7', 'h': '8', 'i': '9', 'j': '0',
@@ -52,8 +51,6 @@ _LETTER_TO_DIGIT = {
 # TTS helper
 # ═══════════════════════════════════════════════════════════════════════════════
 class TTSEngine:
-    """Thread-safe wrapper around pyttsx3 with a cooldown guard."""
-
     def __init__(self, rate: int = 160):
         self._engine = None
         self._last_spoken_at = 0.0
@@ -66,10 +63,6 @@ class TTSEngine:
                 self._engine = None
 
     def speak(self, text: str, force: bool = False) -> bool:
-        """
-        Speak *text*.  Returns True if speech was triggered.
-        Respects SPEAK_COOLDOWN_S unless force=True.
-        """
         if not self._engine or not text.strip():
             return False
         now = time.time()
@@ -88,22 +81,17 @@ class TTSEngine:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Reading-order sort
 # ═══════════════════════════════════════════════════════════════════════════════
-def sort_detections_reading_order(boxes, names: dict) -> list[dict]:
+def sort_detections_reading_order(boxes, names: dict) -> list[list[dict]]:
     """
     Sort detections in natural reading order (top→bottom, left→right).
 
-    Key fix over previous version:
-      The old approach compared each detection to the *first* element of
-      the current row.  On a grid chart (like an alphabet reference card),
-      boxes in the same visual row can have cy values that drift >30 px from
-      top to bottom of the row, so the group kept splitting mid-row.
+    Returns list[list[dict]] — a list of rows, where each row is
+    a list of detection dicts sorted left→right.  The caller decides how to
+    join rows (e.g. with a space between them for word-per-row display).
 
-      New approach — gap-based clustering:
-        1. Sort all detections by cy (top to bottom).
-        2. Look at the *gap* between consecutive cy values.
-        3. A gap larger than ROW_GAP_RATIO × median_height signals a new row.
-      This is robust to perspective tilt and varying cell heights because it
-      reacts to *sudden jumps* rather than an absolute offset from row start.
+    Gap-based row clustering:
+      1. Sort all detections by cy.
+      2. A gap > ROW_GAP_RATIO × median_height signals a new row.
     """
     if not boxes:
         return []
@@ -124,20 +112,18 @@ def sort_detections_reading_order(boxes, names: dict) -> list[dict]:
         })
 
     if len(dets) == 1:
-        return dets
+        return [dets]   # single-element row
 
-    # Threshold = fraction of median box height
     row_split_gap = max(15.0, float(np.median(heights)) * ROW_GAP_RATIO)
 
-    # Sort by center-y
+    # Sort by center-y then cluster into rows
     dets.sort(key=lambda d: d["cy"])
 
-    # Gap-based row splitting
     rows: list[list[dict]] = []
     current_row: list[dict] = [dets[0]]
 
     for prev, curr in zip(dets, dets[1:]):
-        gap = curr["cy"] - prev["cy"]          # always ≥ 0 after sorting
+        gap = curr["cy"] - prev["cy"]
         if gap > row_split_gap:
             rows.append(sorted(current_row, key=lambda d: d["cx"]))
             current_row = [curr]
@@ -145,22 +131,54 @@ def sort_detections_reading_order(boxes, names: dict) -> list[dict]:
             current_row.append(curr)
     rows.append(sorted(current_row, key=lambda d: d["cx"]))
 
-    return [det for row in rows for det in row]
+    return rows   # ← return rows, NOT flattened list
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Intra-row word segmentation
+# ═══════════════════════════════════════════════════════════════════════════════
+def split_row_into_words(row: list[dict]) -> list[list[dict]]:
+    """
+    Split a single left→right-sorted row into individual words by detecting
+    large horizontal gaps between consecutive Braille cells.
+
+    A gap between the right edge of one cell and the left edge of the next
+    that exceeds WORD_GAP_RATIO × median_char_width is treated as a word
+    boundary (space).
+
+    Returns a list of word-groups, each being a list of detection dicts.
+    """
+    if not row:
+        return []
+    if len(row) == 1:
+        return [row]
+
+    # Median character width across all cells in this row
+    widths = [d["x2"] - d["x1"] for d in row]
+    median_width = float(np.median(widths))
+    word_gap_threshold = max(median_width * WORD_GAP_RATIO, 10.0)
+
+    words: list[list[dict]] = []
+    current_word: list[dict] = [row[0]]
+
+    for prev, curr in zip(row, row[1:]):
+        # Gap between right edge of previous cell and left edge of current cell
+        gap = curr["x1"] - prev["x2"]
+        if gap > word_gap_threshold:
+            words.append(current_word)
+            current_word = [curr]
+        else:
+            current_word.append(curr)
+    words.append(current_word)
+
+    return words
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Post-processing: raw label sequence → readable text
 # ═══════════════════════════════════════════════════════════════════════════════
 def labels_to_text(labels: list[str]) -> str:
-    """
-    Convert raw YOLO label sequence to human-readable text.
-
-    Handles:
-      • Capitalisation indicator  ('#' in some datasets maps to caps indicator)
-      • Number indicator          ('#num' or a dedicated class)
-      • Space characters
-      • Unknown labels are passed through as-is
-    """
+    """Convert a single row's label sequence to human-readable text."""
     result = []
     capitalise_next = False
     number_mode = False
@@ -168,7 +186,6 @@ def labels_to_text(labels: list[str]) -> str:
     for lbl in labels:
         lbl_lower = lbl.lower().strip()
 
-        # Common special-class names used in Braille YOLO datasets
         if lbl_lower in ("space", " ", ""):
             result.append(" ")
             number_mode = False
@@ -182,11 +199,9 @@ def labels_to_text(labels: list[str]) -> str:
             number_mode = True
             continue
 
-        # Single letter
         char = lbl_lower
         if number_mode:
             char = _LETTER_TO_DIGIT.get(char, char)
-            # Stay in number mode until a space
         elif capitalise_next:
             char = char.upper()
             capitalise_next = False
@@ -220,8 +235,11 @@ class BrailleDetector:
 
         Returns:
             results   — raw ultralytics Results object
-            text      — assembled human-readable string
-            dets      — sorted list of detection dicts (for drawing etc.)
+            text      — assembled string; words within a row are separated by a
+                        space (detected via horizontal gap), and rows themselves
+                        are also separated by a space.
+                        e.g. "cat dog mouse braille"
+            dets      — flat list of detection dicts in reading order
         """
         results = self.model(
             frame,
@@ -230,59 +248,67 @@ class BrailleDetector:
             imgsz=IMGSZ,
             verbose=False,
         )
-        dets   = []
-        labels = []
+
+        all_rows: list[list[dict]] = []
+
         for r in results:
             if len(r.boxes) == 0:
                 continue
-            sorted_dets = sort_detections_reading_order(list(r.boxes), r.names)
-            dets.extend(sorted_dets)
-            labels.extend(d["label"] for d in sorted_dets)
+            rows = sort_detections_reading_order(list(r.boxes), r.names)
+            all_rows.extend(rows)
 
-        text = labels_to_text(labels)
+        # Flat detection list (for drawing / per-letter JSON)
+        dets = [det for row in all_rows for det in row]
 
-        # Debug: print raw label sequence + row grouping so you can diagnose order issues
-        if self.debug and labels:
-            print(f"[DEBUG] Raw labels ({len(labels)}): {' '.join(labels)}")
-            print(f"[DEBUG] Text output : {text!r}")
+        # Build text row-by-row; within each row split into words by
+        # horizontal gap, then join words with a space.
+        # Final rows are also joined with a space.
+        all_row_texts: list[str] = []
+        for i, row in enumerate(all_rows):
+            word_groups = split_row_into_words(row)
+            word_texts  = [labels_to_text([d["label"] for d in wg]) for wg in word_groups]
+            row_text    = " ".join(t for t in word_texts if t)
+
+            if self.debug:
+                print(f"[DEBUG] Row {i+1} — {len(word_groups)} word(s):")
+                for j, wg in enumerate(word_groups):
+                    print(f"          word {j+1}: {' '.join(d['label'] for d in wg)}"
+                          f"  → '{word_texts[j]}'")
+                print(f"          row text: {row_text!r}")
+
+            if row_text:
+                all_row_texts.append(row_text)
+
+        text = " ".join(all_row_texts)
+
+        if self.debug and text:
+            print(f"[DEBUG] Final text : {text!r}")
 
         return results, text, dets
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# OSD (on-screen display) helpers
+# OSD helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 def draw_overlay(frame: np.ndarray, text: str, fps: float,
                  speaking: bool = False) -> np.ndarray:
-    """Annotate frame with detected text, FPS, and status hints."""
     h, w = frame.shape[:2]
-
-    # Semi-transparent top banner
     overlay = frame.copy()
     cv2.rectangle(overlay, (0, 0), (w, 60), (0, 0, 0), -1)
     cv2.addWeighted(overlay, 0.55, frame, 0.45, 0, frame)
-
-    # Detected text
     display_text = text if text else "— no Braille detected —"
     cv2.putText(frame, f"Braille: {display_text}", (12, 40),
                 FONT, 0.9, (50, 255, 120), 2, cv2.LINE_AA)
-
-    # FPS counter (top-right)
     fps_str = f"{fps:.1f} FPS"
     (tw, _), _ = cv2.getTextSize(fps_str, FONT, 0.6, 1)
     cv2.putText(frame, fps_str, (w - tw - 10, 22),
                 FONT, 0.6, (180, 180, 180), 1, cv2.LINE_AA)
-
-    # Speaking indicator
     if speaking:
         cv2.putText(frame, "◉ SPEAKING", (12, h - 40),
                     FONT, 0.6, (0, 200, 255), 2, cv2.LINE_AA)
-
-    # Controls hint (bottom bar)
     hint = "  s = speak   r = reset   q = quit"
     cv2.putText(frame, hint, (12, h - 12),
                 FONT, 0.5, (200, 200, 200), 1, cv2.LINE_AA)
-
     return frame
 
 
@@ -291,7 +317,6 @@ def draw_overlay(frame: np.ndarray, text: str, fps: float,
 # ═══════════════════════════════════════════════════════════════════════════════
 def run_on_image(source: str, detector: BrailleDetector,
                  tts: TTSEngine, output_dir: str = "sample_outputs") -> str:
-    """Run detection on a single image file and save annotated output."""
     frame = cv2.imread(source)
     if frame is None:
         sys.exit(f"[ERROR] Cannot read image: {source}")
@@ -300,8 +325,8 @@ def run_on_image(source: str, detector: BrailleDetector,
     annotated = results[0].plot()
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    stem      = Path(source).stem
-    out_path  = str(Path(output_dir) / f"{stem}_braille_result.jpg")
+    stem     = Path(source).stem
+    out_path = str(Path(output_dir) / f"{stem}_braille_result.jpg")
     cv2.imwrite(out_path, annotated)
 
     print(f"\n{'─'*50}")
@@ -318,17 +343,6 @@ def run_on_image(source: str, detector: BrailleDetector,
 # Video / camera mode
 # ═══════════════════════════════════════════════════════════════════════════════
 def run_video(source, detector: BrailleDetector, tts: TTSEngine):
-    """
-    Real-time detection loop for webcam or video file.
-
-    Key improvements:
-      • FPS measurement via exponential moving average.
-      • Stability buffer: text must persist for STABILITY_FRAMES before
-        auto-speech (avoids babbling on flickering detections).
-      • 'r' key clears history so you can reset to a new Braille cell.
-      • Graceful camera-open failure with helpful message.
-    """
-    # Accept integer index or file path
     cam_index = source
     if isinstance(source, str) and source.isdigit():
         cam_index = int(source)
@@ -337,7 +351,6 @@ def run_video(source, detector: BrailleDetector, tts: TTSEngine):
     if not cap.isOpened():
         sys.exit(f"[ERROR] Cannot open video source: {source}")
 
-    # Suggest a backend resolution for webcams
     if isinstance(cam_index, int):
         cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1280)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -345,9 +358,9 @@ def run_video(source, detector: BrailleDetector, tts: TTSEngine):
     print("\n[INFO] BrailleVision running!")
     print("       Controls:  s = speak now   r = reset history   q = quit\n")
 
-    fps_ema        = 30.0          # exponential moving average FPS
+    fps_ema        = 30.0
     prev_time      = time.time()
-    stability_buf  = deque(maxlen=STABILITY_FRAMES)   # recent text readings
+    stability_buf  = deque(maxlen=STABILITY_FRAMES)
     last_auto_text = ""
     speaking       = False
 
@@ -360,18 +373,16 @@ def run_video(source, detector: BrailleDetector, tts: TTSEngine):
         results, text, _ = detector.predict_frame(frame)
         annotated = results[0].plot()
 
-        # FPS
         now = time.time()
         dt  = max(now - prev_time, 1e-6)
-        fps_ema    = 0.9 * fps_ema + 0.1 * (1.0 / dt)
-        prev_time  = now
+        fps_ema   = 0.9 * fps_ema + 0.1 * (1.0 / dt)
+        prev_time = now
 
-        # Stability check for auto-speech
         stability_buf.append(text)
         stable_text = text if (
             len(stability_buf) == STABILITY_FRAMES
-            and len(set(stability_buf)) == 1     # all frames identical
-            and text                              # non-empty
+            and len(set(stability_buf)) == 1
+            and text
             and text != last_auto_text
         ) else ""
 
@@ -407,44 +418,29 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="BrailleVision — real-time Braille to text/speech"
     )
-    parser.add_argument(
-        "--source", default=None,
-        help="Image/video path or webcam index (default: 0 = first webcam)"
-    )
-    parser.add_argument(
-        "--weights", default=DEFAULT_WEIGHTS,
-        help=f"Model weights path (default: {DEFAULT_WEIGHTS})"
-    )
-    parser.add_argument(
-        "--conf", type=float, default=DEFAULT_CONF,
-        help=f"Detection confidence threshold (default: {DEFAULT_CONF})"
-    )
-    parser.add_argument(
-        "--iou", type=float, default=DEFAULT_IOU,
-        help=f"NMS IoU threshold (default: {DEFAULT_IOU})"
-    )
-    parser.add_argument(
-        "--no-speech", action="store_true",
-        help="Disable text-to-speech output"
-    )
-    parser.add_argument(
-        "--debug", action="store_true",
-        help="Print raw detected labels + row grouping to terminal each frame"
-    )
+    parser.add_argument("--source", default=None,
+        help="Image/video path or webcam index (default: 0 = first webcam)")
+    parser.add_argument("--weights", default=DEFAULT_WEIGHTS,
+        help=f"Model weights path (default: {DEFAULT_WEIGHTS})")
+    parser.add_argument("--conf", type=float, default=DEFAULT_CONF,
+        help=f"Detection confidence threshold (default: {DEFAULT_CONF})")
+    parser.add_argument("--iou", type=float, default=DEFAULT_IOU,
+        help=f"NMS IoU threshold (default: {DEFAULT_IOU})")
+    parser.add_argument("--no-speech", action="store_true",
+        help="Disable text-to-speech output")
+    parser.add_argument("--debug", action="store_true",
+        help="Print raw detected labels + row/word grouping to terminal each frame")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-
     detector = BrailleDetector(args.weights, args.conf, args.iou, debug=args.debug)
-    tts      = TTSEngine() if not args.no_speech else TTSEngine.__new__(TTSEngine)
+    tts = TTSEngine() if not args.no_speech else TTSEngine.__new__(TTSEngine)
     if args.no_speech:
-        tts._engine = None   # disable TTS without needing a separate flag
+        tts._engine = None
 
     source = args.source
-
-    # Determine mode
     if source is None:
         run_video(0, detector, tts)
     else:
