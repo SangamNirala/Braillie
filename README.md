@@ -18,7 +18,7 @@
 
 **🏆 BrailleVision Hackathon 2026 Submission**
 
-[**🎬 Watch Demo**](demo/demo_video_link.txt) · [**🚀 Quick Start**](#-quick-start) · [**🧠 Architecture**](#%EF%B8%8F-technical-architecture) · [**📊 Performance**](#-model-performance)
+[**🎬 Watch Demo**](https://drive.google.com/file/d/1XIyiPZLWCgqCx4Z11temPelqa8oo_plR/view?usp=sharing) · [**🚀 Quick Start**](#-quick-start) · [**🧠 Architecture**](#%EF%B8%8F-technical-architecture) · [**📊 Performance**](#-model-performance)
 
 </div>
 
