@@ -2,48 +2,69 @@
 
 > An assistive AI system that reads real physical/embossed Braille using a camera and converts it into English text and speech in real time.
 
-<img width="612" height="344" alt="test5" src="https://github.com/user-attachments/assets/90dc9790-fee3-4e6e-912c-21cf58fbf23e" />
-
-
-
-
-<img width="612" height="344" alt="test5_braille_result" src="https://github.com/user-attachments/assets/6491983c-a1c4-4785-8572-877f4955d9d6" />
-
 ---
-
-## Live PHOTO during taking video
-
-
-<img width="709" height="671" alt="preview" src="https://github.com/user-attachments/assets/5e9f8a2f-da87-4a71-984a-eb126b3e7585" />
 
 ## 📌 Project Overview
 
 BrailleVision is a deep learning-based assistive technology built for the **BrailleVision Hackathon 2026**. It uses a fine-tuned YOLOv8 object detection model to detect and classify all 26 Braille letters (A–Z) from camera input or uploaded images, then assembles them into readable English text and optionally speaks it aloud.
+
+The system successfully detects **all 26 Braille letters (A–Z) in a single image** with an average confidence of 85% and achieves **98.0% mAP@0.5** through a two-phase transfer learning training strategy.
 
 ---
 
 ## 🎯 Key Features
 
 - 📷 **Real-time camera detection** — point a webcam at physical Braille and see live results
-- 🖼️ **Image upload mode** — upload a Braille photo via web app or CLI
-- 🔊 **Text-to-speech** — detected text is spoken aloud using pyttsx3 or browser TTS
-- 🌐 **FastAPI web app** — browser-based UI with drag-and-drop upload, side-by-side comparison, and per-letter confidence breakdown
-- 📊 **98.1% mAP@0.5** — state-of-the-art accuracy on 26 Braille classes
+- 🖼️ **Web app upload mode** — drag and drop a Braille photo, get instant annotated output
+- 🔠 **Braille dot visualizer** — scrollable visual display of each detected Braille cell
+- 🔊 **Text-to-speech** — speak button reads detected text aloud via browser Speech API
+- 📋 **Copy to clipboard** — one-click copy of detected text
+- 📊 **Per-letter confidence** — shows confidence % for every detected character
+- 🌐 **FastAPI web app** — full browser-based UI, no installation needed for judges
+- ⚡ **~30ms inference** — real-time performance on GPU
 - 🔤 **Reading-order sorting** — characters assembled left-to-right, top-to-bottom
-- ⚡ **30ms inference** — real-time performance on GPU
 
 ---
 
 ## 📊 Model Performance
 
+### Final Model (Phase 2 — used in production)
+
 | Metric | Score |
 |---|---|
-| mAP@0.5 | **0.981 (98.1%)** |
-| mAP@0.5:0.95 | **0.764 (76.4%)** |
-| Precision | **0.950 (95.0%)** |
-| Recall | **0.963 (96.3%)** |
-| Inference Speed | **~30ms per image** |
-| Training Time | **2.2 hours (100 epochs, Tesla T4 GPU)** |
+| **mAP@0.5** | **0.980 (98.0%)** |
+| **mAP@0.5:0.95** | **0.771 (77.1%)** |
+| **Precision** | **0.943 (94.3%)** |
+| **Recall** | **0.976 (97.6%)** |
+| **Inference Speed** | **~24ms per image (GPU)** |
+| **Total Training Time** | **3.6 hours (Tesla T4 GPU)** |
+
+### Phase Comparison
+
+| Phase | mAP@0.5 | mAP@0.5:0.95 | Epochs | Duration |
+|---|---|---|---|---|
+| Phase 1 (heavy augmentation) | 0.978 | 0.756 | 120 | 2.6 hrs |
+| **Phase 2 (fine-tuning)** | **0.980** | **0.771** | 40 | 1.0 hr |
+
+### Per-Class AP@0.5 (Final Model)
+
+| Letter | AP@0.5 | Letter | AP@0.5 |
+|---|---|---|---|
+| A | 0.971 | N | 0.991 |
+| B | 0.967 | O | 0.992 |
+| C | 0.993 | P | 0.990 |
+| D | 0.987 | Q | **0.995** |
+| E | 0.993 | R | 0.986 |
+| F | 0.941 ⚠️ | S | 0.991 |
+| G | **0.995** | T | 0.986 |
+| H | 0.990 | U | **0.995** |
+| I | 0.990 | V | 0.992 |
+| J | 0.885 ⚠️ | W | 0.988 |
+| K | 0.968 | X | 0.970 |
+| L | 0.983 | Y | 0.961 |
+| M | 0.978 | Z | **0.995** |
+
+> ⚠️ J and F have slightly lower AP due to fewer training samples in the dataset — all other letters are above 0.94.
 
 ---
 
@@ -51,14 +72,15 @@ BrailleVision is a deep learning-based assistive technology built for the **Brai
 
 | Component | Technology |
 |---|---|
-| Object Detection | YOLOv8 (Ultralytics 8.4.58) |
-| Training Framework | PyTorch + CUDA |
+| Object Detection | YOLOv8 medium (Ultralytics 8.4.58) |
+| Training Framework | PyTorch + CUDA 12.8 |
 | Computer Vision | OpenCV |
-| Text-to-Speech | pyttsx3 / Web Speech API |
+| Text-to-Speech | Web Speech API (browser) / pyttsx3 (CLI) |
 | Web Backend | FastAPI + Uvicorn |
-| Frontend | HTML / CSS / Vanilla JS |
-| Training Platform | Google Colab (Tesla T4 GPU) |
+| Frontend | HTML / CSS / Vanilla JavaScript |
+| Training Platform | Google Colab (Tesla T4 16GB GPU) |
 | Dataset Platform | Roboflow |
+| Model Export | ONNX (for deployment) |
 
 ---
 
@@ -75,35 +97,39 @@ braillevision/
 ├── ai_tools_disclosure.md      # Tools and references used
 │
 ├── static/
-│   └── index.html              # Web UI frontend
+│   └── index.html              # Web UI — drag/drop upload, Braille visualizer
 │
 ├── model/
 │   ├── yolov8_braille.pt       # Base pretrained Braille weights (DotNeuralNet)
 │   ├── best.pt                 # Our fine-tuned model weights (52.1 MB)
-│   └── best.onnx               # ONNX export for deployment (99.6 MB)
+│   └── best.onnx               # ONNX export for deployment (99.1 MB)
 │
 ├── training/
-│   ├── train.py                # Training script
+│   ├── train.py                # Two-phase training script (v4)
 │   └── results/
-│       ├── results.png         # Loss and mAP curves
-│       ├── confusion_matrix.png
-│       └── confusion_matrix_normalized.png
+│       ├── phase1/             # Phase 1 results (120 epochs)
+│       │   ├── results.png
+│       │   └── confusion_matrix.png
+│       └── phase2/             # Phase 2 results (40 epochs) — FINAL
+│           ├── results.png
+│           ├── confusion_matrix.png
+│           └── training_report.txt
 │
 ├── dataset/
-│   ├── data.yaml               # Dataset config (26 classes, paths)
+│   ├── data.yaml               # Dataset config (26 classes A-Z)
 │   ├── train/                  # 1,757 training images + labels
 │   ├── valid/                  # 206 validation images + labels
 │   ├── test/                   # Test images
-│   └── dataset_info.md         # Dataset documentation
+│   └── dataset_info.md
 │
 ├── inference/
 │   └── predict.py              # Batch inference + JSON export tool
 │
-├── sample_inputs/              # Sample Braille images for testing
+├── sample_inputs/              # Sample Braille images for judges to test
 ├── sample_outputs/             # Annotated output images + results.json
 │
 └── demo/
-    └── demo_video_link.txt     # Link to demo video
+    └── demo_video_link.txt
 ```
 
 ---
@@ -120,43 +146,75 @@ braillevision/
 | **Format** | YOLOv8 PyTorch (bounding box annotations) |
 | **Train Split** | 1,757 images |
 | **Val Split** | 206 images |
-| **Annotation** | Bounding boxes around individual Braille cells |
+| **Test Split** | Separate test folder |
 
 ---
 
-## 🤖 Model Details
+## 🤖 Model & Training Details
 
 ### Architecture
-- **Base model:** YOLOv8m (medium) — 25.8M parameters, 79.1 GFLOPs
+- **Base model:** YOLOv8m — 25.8M parameters, 79.1 GFLOPs, 93 layers (fused)
 - **Transfer learning from:** `yolov8_braille.pt` (DotNeuralNet — already Braille-trained)
 - **Fine-tuned on:** braillify Roboflow dataset
 - **Output classes:** 26 (A–Z Braille letters)
+- **Recommended inference size:** 640×640 (800 showed no improvement)
 
-### Training Configuration
+### Two-Phase Training Strategy
 
 ```
-Epochs        : 100 (early stopping patience = 25)
-Image size    : 640 × 640
-Batch size    : 6 (auto-selected for Tesla T4 GPU)
-Optimizer     : AdamW  lr=0.0005
-LR Schedule   : Cosine decay
-AMP           : Enabled (mixed precision)
-Cache         : RAM
-Augmentations : Horizontal flip, rotation ±5°, scale, mosaic,
-                mixup=0.1, copy_paste=0.1
-                (vertical flip DISABLED — Braille is orientation-sensitive)
+Phase 1 — Heavy Augmentation (120 epochs)
+─────────────────────────────────────────
+Goal      : Learn all Braille dot patterns robustly
+Optimizer : AdamW  lr=0.0005  → cosine decay
+Batch     : Auto (6 for T4 GPU)
+Key augs  : mosaic=1.0, mixup=0.15, copy_paste=0.15
+            scale=0.5, erasing=0.3
+            flipud=0 (Braille is orientation-sensitive)
+Patience  : 50 epochs early stopping
+Result    : mAP@0.5 = 0.978
+
+Phase 2 — Fine-Tuning (40 epochs)
+──────────────────────────────────
+Goal      : Clean convergence on true data distribution
+Optimizer : AdamW  lr=0.00005 (10× lower)  → cosine decay
+Batch     : Auto
+Key augs  : Minimal — mosaic=0, mixup=0, copy_paste=0
+            Small rotation/scale only
+Patience  : 20 epochs early stopping
+Result    : mAP@0.5 = 0.980  (+0.002 over Phase 1)
 ```
 
-### Training Results
+### Training Script Features (train.py v4)
 
-| Epoch | mAP@0.5 |
-|---|---|
-| 1 | 0.681 |
-| 5 | 0.897 |
-| 14 | 0.953 |
-| 32 | 0.971 |
-| 65 | 0.983 |
-| 100 | **0.981** |
+- ✅ **Google Drive backup** — saves weights every 10 epochs, survives Colab disconnects
+- ✅ **Resume from checkpoint** — `--resume` flag restores from Drive if local files lost
+- ✅ **Custom epoch logging** — clean one-line-per-epoch output (no per-batch spam)
+- ✅ **Per-class AP analysis** — identifies weak letters automatically
+- ✅ **imgsz comparison** — evaluates at both 640 and 800 and recommends best
+- ✅ **ONNX export** — auto-exports final model after training
+- ✅ **Training report** — saves JSON + TXT report to Drive and local
+
+### Training Commands
+
+```bash
+# Standard two-phase training
+python train.py
+
+# Resume after Colab disconnect
+python train.py --resume
+
+# Skip phase 1, fine-tune from existing phase 1 weights
+python train.py --phase2-only
+
+# Evaluate only (no retraining)
+python train.py --eval-only
+
+# Disable early stopping
+python train.py --no-early-stop
+
+# Higher resolution
+python train.py --imgsz 800
+```
 
 ---
 
@@ -165,9 +223,9 @@ Augmentations : Horizontal flip, rotation ±5°, scale, mosaic,
 ### Requirements
 - Python 3.9 or above
 - pip
-- Webcam (for real-time mode)
+- Webcam (for real-time camera mode)
 
-### Install dependencies
+### Install
 
 ```bash
 pip install -r requirements.txt
@@ -200,12 +258,15 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 Open browser at: **http://localhost:8000**
 
-Features:
-- Drag and drop Braille image upload
-- Side-by-side original vs detected result
-- Per-letter confidence breakdown
-- Speak detected text button
-- Download annotated result button
+**Web app features:**
+- Drag and drop or click to upload Braille image
+- Scrollable Braille dot visualizer for each detected letter
+- Side-by-side original vs annotated image
+- Detected text in large font with character count and inference time
+- Average confidence meter
+- 🔊 Speak button — reads detected text aloud
+- 📋 Copy button — copies text to clipboard
+- ↺ Reset button — clear and try another image
 
 ---
 
@@ -215,10 +276,7 @@ Features:
 python app.py
 ```
 
-Controls:
-- `s` → speak detected text
-- `r` → reset detection history
-- `q` → quit
+Controls: `s` = speak | `r` = reset | `q` = quit
 
 ---
 
@@ -226,11 +284,8 @@ Controls:
 
 ```bash
 python app.py --source sample_inputs/test1.jpg
-```
 
-Without speech (headless servers / Codespaces):
-
-```bash
+# Without speech (headless/Codespaces)
 python app.py --source sample_inputs/test1.jpg --no-speech
 ```
 
@@ -239,7 +294,7 @@ python app.py --source sample_inputs/test1.jpg --no-speech
 ### Option 4 — Batch Test (for judges)
 
 ```bash
-# Test all images in sample_inputs/
+# Test all sample images
 python inference/predict.py --source sample_inputs/
 
 # Export detailed JSON results
@@ -251,49 +306,15 @@ python inference/predict.py --source sample_inputs/ --weights model/best.onnx
 
 ---
 
-### Option 5 — Custom Parameters
-
-```bash
-python app.py --weights model/best.pt --conf 0.45 --iou 0.40
-```
+### CLI Arguments
 
 | Argument | Default | Description |
 |---|---|---|
-| `--source` | `None` (webcam) | Image / video path or webcam index |
+| `--source` | `None` (webcam 0) | Image / video path or webcam index |
 | `--weights` | `model/best.pt` | Path to model weights |
 | `--conf` | `0.50` | Detection confidence threshold |
 | `--iou` | `0.40` | NMS IoU threshold |
 | `--no-speech` | `False` | Disable text-to-speech |
-
----
-
-## 🧪 Testing the Model
-
-### Quick test on sample image:
-
-```bash
-python inference/predict.py --source sample_inputs/test1.jpg
-```
-
-### Expected output:
-
-```
-══════════════════════════════════════════════════════════
-  BrailleVision — Batch Inference Summary
-══════════════════════════════════════════════════════════
-
-  [01] test1.jpg
-       Text       : HELLO
-       Detections : 5
-       Time       : 30.4 ms
-       Saved to   : sample_outputs/test1_result.jpg
-
-──────────────────────────────────────────────────────────
-  Files processed  : 1
-  With detections  : 1 / 1
-  Avg. infer. time : 30.4 ms/frame
-══════════════════════════════════════════════════════════
-```
 
 ---
 
@@ -305,21 +326,19 @@ python inference/predict.py --source sample_inputs/test1.jpg
 | `/predict` | POST | Accepts image upload, returns detections |
 | `/health` | GET | Health check |
 
-### `/predict` Response Example:
+### `/predict` Response Example
 
 ```json
 {
   "success": true,
-  "text": "HELLO",
+  "text": "abcdefghijklmnopqrstuvwxyz",
   "letters": [
-    {"letter": "H", "confidence": 96.2},
-    {"letter": "E", "confidence": 97.8},
-    {"letter": "L", "confidence": 94.1},
-    {"letter": "L", "confidence": 95.3},
-    {"letter": "O", "confidence": 98.1}
+    {"letter": "A", "confidence": 86.0},
+    {"letter": "B", "confidence": 84.0},
+    {"letter": "C", "confidence": 93.0}
   ],
-  "count": 5,
-  "inference_ms": 30.4,
+  "count": 26,
+  "inference_ms": 24.2,
   "image_b64": "..."
 }
 ```
@@ -329,56 +348,40 @@ python inference/predict.py --source sample_inputs/test1.jpg
 ## 🔍 How It Works
 
 ```
-Physical Braille input (camera / image)
-              ↓
-    OpenCV frame capture
-              ↓
-    YOLOv8 detection
-    (detects each Braille cell as A–Z)
-              ↓
-    Reading-order sort
-    (left→right, top→bottom using dynamic row grouping)
-              ↓
-    Label sequence → English text assembly
-              ↓
-    Display on screen + Text-to-speech output
+Physical Braille input (camera / uploaded image)
+                  ↓
+      OpenCV frame capture / decode
+                  ↓
+      YOLOv8 detection
+      (detects each Braille cell, classifies as A–Z)
+                  ↓
+      Reading-order sort
+      (dynamic row grouping — left→right, top→bottom)
+                  ↓
+      Label sequence → English text assembly
+                  ↓
+      Web UI display + Braille dot visualizer + TTS
 ```
 
 ---
 
-## 📈 Per-Class Accuracy (Validation Set)
-
-| Letter | mAP@0.5 | Letter | mAP@0.5 |
-|---|---|---|---|
-| A | 0.970 | N | 0.989 |
-| B | 0.957 | O | 0.991 |
-| C | 0.992 | P | 0.993 |
-| D | 0.990 | Q | **0.995** |
-| E | 0.990 | R | 0.990 |
-| F | 0.951 | S | 0.986 |
-| G | 0.980 | T | 0.985 |
-| H | 0.990 | U | 0.989 |
-| I | 0.985 | V | 0.991 |
-| J | 0.924 | W | 0.974 |
-| K | 0.986 | X | 0.978 |
-| L | 0.982 | Y | 0.977 |
-| M | 0.979 | Z | 0.986 |
-
----
-
-## 🧠 Transfer Learning Approach
-
-Rather than training from scratch, we used a two-stage transfer learning strategy:
+## 🧠 Transfer Learning Strategy
 
 ```
-Stage 1: yolov8m.pt (COCO pretrained — general object detection)
-              ↓  [DotNeuralNet training]
-Stage 2: yolov8_braille.pt (Braille-aware base weights)
-              ↓  [Our fine-tuning on braillify dataset]
-Stage 3: best.pt (Our final model — 98.1% mAP)
+Stage 1: yolov8m.pt
+         (COCO pretrained — general object detection)
+              ↓  [DotNeuralNet training on Braille]
+Stage 2: yolov8_braille.pt
+         (Braille-aware base — knows dot patterns)
+              ↓  [Phase 1: Our heavy augmentation training — 120 epochs]
+Stage 3: braille_v4_phase1/best.pt
+         (mAP@0.5 = 0.978)
+              ↓  [Phase 2: Our fine-tuning — 40 epochs, 10× lower LR]
+Stage 4: braille_v4_phase2/best.pt  ← FINAL MODEL
+         (mAP@0.5 = 0.980)
 ```
 
-This approach required only **100 epochs** and **2.2 hours** to achieve research-grade accuracy, compared to 500+ epochs from scratch.
+This approach required only **3.6 hours total** to achieve research-grade accuracy across all 26 Braille letters.
 
 ---
 
@@ -395,7 +398,7 @@ This approach required only **100 epochs** and **2.2 hours** to achieve research
 
 ## 🤝 AI Tools Disclosure
 
-- **Claude (Anthropic)** — project guidance, code architecture, training pipeline
+- **Claude (Anthropic)** — project guidance, code architecture, training pipeline design
 - **DotNeuralNet** — pretrained `yolov8_braille.pt` used as base weights for transfer learning
 - **Roboflow** — dataset hosting and YOLOv8 format export
 - **Google Colab** — Tesla T4 GPU used for model training
@@ -408,15 +411,16 @@ This approach required only **100 epochs** and **2.2 hours** to achieve research
 - [x] `README.md` with setup and run instructions
 - [x] `requirements.txt`
 - [x] `dataset/data.yaml` with class names and paths
-- [x] Training code (`training/train.py`)
+- [x] Training code (`training/train.py` — two-phase v4)
 - [x] Inference code (`inference/predict.py`, `app.py`)
 - [x] Model weights (`model/best.pt`, `model/best.onnx`)
-- [x] Training results (loss curves, confusion matrix)
-- [x] Sample inputs and outputs
-- [x] FastAPI web application
+- [x] Training results — loss curves + confusion matrix (Phase 1 & Phase 2)
+- [x] Training report (`training_report.txt`)
+- [x] Sample inputs and annotated outputs
+- [x] FastAPI web application with Braille dot visualizer
 - [x] AI tools disclosure
 - [x] Demo video
 
 ---
 
-*BrailleVision — Making Braille accessible through AI*
+*BrailleVision — Making Braille accessible through AI | mAP 98.0% | All 26 letters detected*
