@@ -5,3 +5,4 @@ roboflow
 torch
 torchvision
 Pillow
+onnxruntime

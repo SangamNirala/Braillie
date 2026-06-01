@@ -32,7 +32,7 @@ from ultralytics import YOLO
 # Config
 # ═══════════════════════════════════════════════════════════════════════════════
 DEFAULT_WEIGHTS   = "model/best.pt"
-DEFAULT_CONF      = 0.40          # lowered: 0.50 was missing low-conf chars like 'j'
+DEFAULT_CONF      = 0.25          # lowered from 0.40 → catches low-confidence embossed letters
 DEFAULT_IOU       = 0.35          # tighter NMS: prevents duplicate boxes on dense grids
 IMGSZ             = 640
 ROW_GAP_RATIO     = 0.55          # row gap = this × median box height (tuned for grid layouts)
