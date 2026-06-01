@@ -24,6 +24,9 @@
 
 ---
 
+<img width="814" height="606" alt="all_braillie_letter" src="https://github.com/user-attachments/assets/ad36052f-e6a6-4ec4-94cb-25bb7e19d8ae" />
+
+
 ## 🌍 The Problem We're Solving
 
 > **Over 285 million people worldwide are visually impaired** — yet Braille remains locked behind a wall of inaccessibility for the **sighted world around them**. Parents who can't read their child's Braille homework. Teachers without certification. Friends, doctors, employers — all unable to bridge the gap.
