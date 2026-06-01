@@ -4,6 +4,10 @@
 
 ---
 
+<img width="868" height="611" alt="braillie_letters_result" src="https://github.com/user-attachments/assets/b7f1e305-5b60-4e8a-abb1-53e8cbe556bf" />
+
+
+
 ## 📌 Project Overview
 
 BrailleVision is a deep learning-based assistive technology built for the **BrailleVision Hackathon 2026**. It uses a fine-tuned YOLOv8 object detection model to detect and classify all 26 Braille letters (A–Z) from camera input or uploaded images, then assembles them into readable English text and optionally speaks it aloud.
